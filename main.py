@@ -18,7 +18,7 @@ def main():
     # Define task.
     parser = argparse.ArgumentParser(
             description='Large-scale deep learning framework.')
-    parser.add_argument('--task', metavar='NAME', type=str, 
+    parser.add_argument('--task', metavar='NAME', type=str, required=True,
             help='specify a task name that defined in $ROOT/task/')
     arg = parser.parse_args(sys.argv[1:3])
     task = importlib.import_module(arg.task)
@@ -26,8 +26,9 @@ def main():
 
     # Print options.
     print('Options.')
-    for k, v in opt.__dict__.items():
-        print('  {0}: {1}'.format(k, v))
+    for k in sorted(vars(opt)):
+        if not k.startswith('dst_dir'):
+            print('  {0}: {1}'.format(k, opt.__dict__[k]))
 
     # Create model, criterion, optimizer.
     model = task.create_model()

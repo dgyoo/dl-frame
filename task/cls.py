@@ -1,5 +1,6 @@
 import sys
 import argparse
+import os.path
 import importlib
 from random import shuffle
 from PIL import Image
@@ -12,6 +13,8 @@ import torchvision.models as models
 from torch.utils.data import Dataset
 from torch.utils.data.dataloader import default_collate
 
+import utils
+
 ##########################
 # Task-specific options. #
 ##########################
@@ -20,6 +23,8 @@ parser.add_argument('--db', default='imagenet', metavar='NAME', type=str,
                     help='dataset name')
 parser.add_argument('--db-root', default='/home/dgyoo/workspace/datain/ILSVRC', metavar='DIR', type=str,
                     help='root to the dataset')
+parser.add_argument('--dst-dir', default='/home/dgyoo/workspace/dataout', metavar='DIR', type=str,
+                    help='destination directory in that to save output data')
 parser.add_argument('--arch', default='resnet18', metavar='NAME', type=str,
                     help='model architecture')
 parser.add_argument('--pretrained', dest='pretrained', action='store_true',
@@ -42,7 +47,17 @@ parser.add_argument('--weight-decay', default=1e-4, metavar='W', type=float,
                     help='weight decay')
 parser.add_argument('--evaluate', dest='evaluate', action='store_true',
                     help='if specified, evaluate model on validation set')
+ignore = ['db', 'db_root', 'dst_dir', 'arch', 'start_from', 'num_worker', 'num_epoch', 'start_epoch', 'evaluate']
 opt = parser.parse_args(sys.argv[3:])
+
+################################
+# Set destination directories. #
+################################
+changes = utils.arg_changes(parser, opt, ignore)
+opt.dst_dir_db = os.path.join(opt.dst_dir, opt.db)
+opt.dst_dir_model = os.path.join(opt.dst_dir_db, opt.arch)
+if changes:
+    opt.dst_dir_model += ',' + changes
 
 ############################################
 # Functions to define model, loss, solver. #
