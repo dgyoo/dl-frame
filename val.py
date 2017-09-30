@@ -4,7 +4,7 @@ from collections import Iterable
 
 import utils
 
-def val(loader, model, criterion, evaluator, epoch):
+def val(loader, model, criterion, evaluator, epoch=0):
     # Initialize meters.
     data_time = utils.AverageMeter()
     net_time = utils.AverageMeter()
@@ -14,6 +14,7 @@ def val(loader, model, criterion, evaluator, epoch):
     # Do the job.
     model.eval()
     t0 = time.time()
+    print('Start validation at epoch {}.'.format(epoch))
     for i, (inputs, targets) in enumerate(loader):
         # Set variables.
         targets = targets.cuda(async=True)
@@ -52,7 +53,7 @@ def val(loader, model, criterion, evaluator, epoch):
 
     # Summerize results.
     print('Summary of validation at epoch {epoch:d}.\n'
-            '  Number of sample: {num_pair:d}\n'
+            '  Number of sample: {num_sample:d}\n'
             '  Number of batches: {num_batch:d}\n'
             '  Total time for data: {data_time:.2f} sec\n'
             '  Total time for network: {net_time:.2f} sec\n'

@@ -12,6 +12,7 @@ def train(loader, model, criterion, optimizer, evaluator, epoch):
     eval_meter = utils.AverageMeter()
     
     # Do the job.
+    print('Start training at epoch {}.'.format(epoch))
     model.train()
     t0 = time.time()
     for i, (inputs, targets) in enumerate(loader):

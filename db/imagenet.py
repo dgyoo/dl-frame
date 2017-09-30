@@ -26,7 +26,7 @@ def make_dataset_train(root):
                 if any(fname.endswith(extension) for extension in IMG_EXTENSIONS):
                     path = os.path.join(rootdir, fname)
                     pairs.append((path, class_to_idx[target]))
-    return pairs, classes
+    return {'pairs': pairs, 'classes': classes}
 
 def make_dataset_val(root):
     root_train = os.path.join(root, 'train')
@@ -41,4 +41,4 @@ def make_dataset_val(root):
             class_idx = int(class_idx)
             assert os.path.isfile(fpath), 'No such file: {}'.format(fpath)
             pairs.append((fpath, class_idx))
-    return pairs, classes
+    return {'pairs': pairs, 'classes': classes}
