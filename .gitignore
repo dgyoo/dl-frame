@@ -1,3 +1,4 @@
 *.sh
 *.tar
+*.swp
 __pycache__/
