@@ -66,7 +66,7 @@ def train(loader, model, criterion, optimizer, evaluator, epoch):
             '  Total time for network: {net_time:.2f} sec\n'
             '  Total time: {total_time:.2f} sec\n'
             '  Average loss: {avg_loss:.4f}\n'
-            '  Performance: {avg_perf:.4f}\n'.format(
+            '  Performance: {avg_perf}\n'.format(
                 epoch=epoch,
                 num_sample=loss_meter.count,
                 num_batch=len(loader),
