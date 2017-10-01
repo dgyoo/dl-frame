@@ -34,10 +34,22 @@ def main():
     changes = utils.arg_changes(task.parser, opt, task.ignore)
     opt.dst_dir_db = os.path.join(opt.dst_dir, opt.db)
     dst_dir_model = os.path.join(opt.dst_dir_db, opt.arch)
-    if opt.start_from:
-        assert opt.start_from.endswith('.pth.tar')
-        dst_dir_model = opt.start_from[:-8]
-    if changes: dst_dir_model += ',' + changes
+    start_from = opt.start_from
+    if start_from:
+        assert start_from.endswith('.pth.tar')
+        dst_dir_model = start_from[:-8]
+    if changes:
+        dst_dir_model += ',' + changes
+
+    # Decay learning rate if necessary.
+    learn_rate = opt.learn_rate
+    for level in range(opt.decay):
+        start_from = os.path.join(dst_dir_model, 'best.pth.tar')
+        assert opt.num_epoch == len(utils.Logger(os.path.join(dst_dir_model, 'val.log'))), \
+                'Finish training before decaying.'
+        dst_dir_model = os.path.join(dst_dir_model, 'best,decay={}'.format(level + 1))
+        learn_rate *= .1
+        print('Decay learning rate: {:.0e}'.format(learn_rate))
     dst_path_model = os.path.join(dst_dir_model, '{:03d}.pth.tar')
 
     # Create loggers.
@@ -48,7 +60,7 @@ def main():
     # Define start model, epoch, and the best performance, to resume train.
     start_epoch = len(logger_train)
     best_perform = logger_val.max() if start_epoch > 0 else 0
-    start_from = dst_path_model.format(start_epoch) if start_epoch > 0 else opt.start_from
+    start_from = dst_path_model.format(start_epoch) if start_epoch > 0 else start_from
 
     # Create model, criterion, optimizer.
     model = task.Model()
@@ -69,7 +81,7 @@ def main():
     db.build()
     db.estimate_stats()
 
-    # Create batch manager..
+    # Create batch manager.
     batch_manager_train = task.BatchManagerTrain(db.train, db.stats)
     batch_manager_val = task.BatchManagerVal(db.val, db.stats)
     
@@ -82,17 +94,17 @@ def main():
                 batch_manager_val.get_evaluator())
         return
 
+    # Adjust learning rate.
+    for param_group in model.optimizer.param_groups:
+        param_group['lr'] = learn_rate
+
     # Do the job.
     cudnn.benchmark = True
     os.makedirs(dst_dir_model, exist_ok=True)
     for epoch in range(start_epoch, opt.num_epoch):
-        
-        # Adjust learning rate.
-        for param_group in model.optimizer.param_groups:
-            param_group['lr'] = opt.learn_rate * (.1 ** (epoch // 30))
 
         # Train.
-        print('\nStart training at epoch {}.'.format(epoch))
+        print('\nStart training at epoch {}.'.format(epoch + 1))
         train.train(
                 batch_manager_train.get_loader(),
                 model.model,
@@ -103,7 +115,7 @@ def main():
                 epoch + 1)
 
         # Val.
-        print('\nStart validation at epoch {}.'.format(epoch))
+        print('\nStart validation at epoch {}.'.format(epoch + 1))
         perform = val.val(
                 batch_manager_val.get_loader(),
                 model.model,
@@ -133,6 +145,7 @@ def main():
             os.system('cp {} {}'.format(
                 dst_path_model.format(epoch + 1),
                 os.path.join(dst_dir_model, 'best.pth.tar')))
+            best_perform = perform
 
 if __name__ == '__main__':
     main()

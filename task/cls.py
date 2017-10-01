@@ -34,19 +34,21 @@ parser.add_argument('--start-from', default='', metavar='PATH', type=str,
                     help='path to a model from that to resume training')
 parser.add_argument('--num-worker', default=16, metavar='N', type=int,
                     help='number of workers that provide mini-batches')
-parser.add_argument('--num-epoch', default=90, metavar='N', type=int,
+parser.add_argument('--num-epoch', default=30, metavar='N', type=int,
                     help='number of total epochs to run')
 parser.add_argument('--batch-size', default=256, metavar='N', type=int,
                     help='mini-batch size')
 parser.add_argument('--learn-rate', default=0.1, metavar='LR', type=float,
                     help='initial learning rate')
+parser.add_argument('--decay', default=0, metavar='N', type=int,
+                    help='learning rate decay level')
 parser.add_argument('--momentum', default=0.9, metavar='M', type=float,
                     help='momentum')
 parser.add_argument('--weight-decay', default=1e-4, metavar='W', type=float,
                     help='weight decay')
 parser.add_argument('--evaluate', dest='evaluate', action='store_true',
                     help='if specified, evaluate model on validation set')
-ignore = ['db', 'db_root', 'dst_dir', 'arch', 'start_from', 'num_worker', 'num_epoch', 'evaluate']
+ignore = ['db', 'db_root', 'dst_dir', 'arch', 'start_from', 'num_worker', 'num_epoch', 'decay', 'evaluate']
 opt = parser.parse_args(sys.argv[3:])
 
 ############################
