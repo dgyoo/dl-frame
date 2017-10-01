@@ -1,9 +1,10 @@
 import torch
 import time
+from collections import Iterable
 
 import utils
 
-def train(loader, model, criterion, optimizer, evaluator, epoch):
+def train(loader, model, criterion, optimizer, evaluator, logger, epoch):
     
     # Initialize meters.
     data_time = utils.AverageMeter()
@@ -12,7 +13,6 @@ def train(loader, model, criterion, optimizer, evaluator, epoch):
     eval_meter = utils.AverageMeter()
     
     # Do the job.
-    print('Start training at epoch {}.'.format(epoch))
     model.train()
     t0 = time.time()
     for i, (inputs, targets) in enumerate(loader):
@@ -60,6 +60,9 @@ def train(loader, model, criterion, optimizer, evaluator, epoch):
                     eval_avg=utils.to_string(eval_meter.avg)))
 
     # Summerize results.
+    perform = eval_meter.avg
+    if not isinstance(perform, Iterable): perform = [perform]
+    logger.write([epoch, loss_meter.avg] + perform)
     print('Summary of training at epoch {epoch:d}.\n'
             '  Number of pairs: {num_sample:d}\n'
             '  Number of batches: {num_batch:d}\n'
@@ -67,7 +70,7 @@ def train(loader, model, criterion, optimizer, evaluator, epoch):
             '  Total time for network: {net_time:.2f} sec\n'
             '  Total time: {total_time:.2f} sec\n'
             '  Average loss: {avg_loss:.4f}\n'
-            '  Performance: {avg_perf}\n'.format(
+            '  Performance: {avg_perf}'.format(
                 epoch=epoch,
                 num_sample=loss_meter.count,
                 num_batch=len(loader),

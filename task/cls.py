@@ -36,8 +36,6 @@ parser.add_argument('--num-worker', default=16, metavar='N', type=int,
                     help='number of workers that provide mini-batches')
 parser.add_argument('--num-epoch', default=90, metavar='N', type=int,
                     help='number of total epochs to run')
-parser.add_argument('--start-epoch', default=0, metavar='N', type=int,
-                    help='starting epoch number to resume training')
 parser.add_argument('--batch-size', default=256, metavar='N', type=int,
                     help='mini-batch size')
 parser.add_argument('--learn-rate', default=0.1, metavar='LR', type=float,
@@ -48,17 +46,8 @@ parser.add_argument('--weight-decay', default=1e-4, metavar='W', type=float,
                     help='weight decay')
 parser.add_argument('--evaluate', dest='evaluate', action='store_true',
                     help='if specified, evaluate model on validation set')
-ignore = ['db', 'db_root', 'dst_dir', 'arch', 'start_from', 'num_worker', 'num_epoch', 'start_epoch', 'evaluate']
+ignore = ['db', 'db_root', 'dst_dir', 'arch', 'start_from', 'num_worker', 'num_epoch', 'evaluate']
 opt = parser.parse_args(sys.argv[3:])
-
-################################
-# Set destination directories. #
-################################
-changes = utils.arg_changes(parser, opt, ignore)
-opt.dst_dir_db = os.path.join(opt.dst_dir, opt.db)
-opt.dst_dir_model = os.path.join(opt.dst_dir_db, opt.arch)
-if changes:
-    opt.dst_dir_model += ',' + changes
 
 ############################
 # Class to create a model. #

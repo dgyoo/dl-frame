@@ -4,7 +4,7 @@ from collections import Iterable
 
 import utils
 
-def val(loader, model, criterion, evaluator, epoch=0):
+def val(loader, model, criterion, evaluator, logger=None, epoch=0):
     # Initialize meters.
     data_time = utils.AverageMeter()
     net_time = utils.AverageMeter()
@@ -14,7 +14,6 @@ def val(loader, model, criterion, evaluator, epoch=0):
     # Do the job.
     model.eval()
     t0 = time.time()
-    print('Start validation at epoch {}.'.format(epoch))
     for i, (inputs, targets) in enumerate(loader):
         # Set variables.
         targets = targets.cuda(async=True)
@@ -52,6 +51,9 @@ def val(loader, model, criterion, evaluator, epoch=0):
                     eval_avg=utils.to_string(eval_meter.avg)))
 
     # Summerize results.
+    perform = eval_meter.avg
+    if not isinstance(perform, Iterable): perform = [perform]
+    if not logger is None: logger.write([epoch, loss_meter.avg] + perform)
     print('Summary of validation at epoch {epoch:d}.\n'
             '  Number of sample: {num_sample:d}\n'
             '  Number of batches: {num_batch:d}\n'
@@ -59,7 +61,7 @@ def val(loader, model, criterion, evaluator, epoch=0):
             '  Total time for network: {net_time:.2f} sec\n'
             '  Total time: {total_time:.2f} sec\n'
             '  Average loss: {avg_loss:.4f}\n'
-            '  Performance: {avg_perf}\n'.format(
+            '  Performance: {avg_perf}'.format(
                 epoch=epoch,
                 num_sample=loss_meter.count,
                 num_batch=len(loader),
@@ -69,4 +71,4 @@ def val(loader, model, criterion, evaluator, epoch=0):
                 avg_loss=loss_meter.avg,
                 avg_perf=utils.to_string(eval_meter.avg, '%.4f')))
 
-    return eval_meter.avg[0] if isinstance(eval_meter.avg, Iterable) else eval_meter.avg
+    return perform[0]
