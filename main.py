@@ -134,8 +134,8 @@ def main():
         torch.save(data, dst_path_model.format(epoch + 1))
 
         # Remove previous model.
-        print('Remove the previous model.')
         if epoch > 0:
+            print('Remove the previous model.')
             os.system('rm {}'.format(dst_path_model.format(epoch)))
 
         # Backup the best model.
