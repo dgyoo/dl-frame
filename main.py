@@ -92,7 +92,7 @@ def main():
             param_group['lr'] = opt.learn_rate * (.1 ** (epoch // 30))
 
         # Train.
-        print('Start training at epoch {}.'.format(epoch))
+        print('\nStart training at epoch {}.'.format(epoch))
         train.train(
                 batch_manager_train.get_loader(),
                 model.model,
@@ -103,7 +103,7 @@ def main():
                 epoch + 1)
 
         # Val.
-        print('Start validation at epoch {}.'.format(epoch))
+        print('\nStart validation at epoch {}.'.format(epoch))
         perform = val.val(
                 batch_manager_val.get_loader(),
                 model.model,
@@ -113,7 +113,7 @@ def main():
                 epoch=epoch + 1)
 
         # Save model.
-        print('Save this model.')
+        print('\nSave this model.')
         data = {
             'opt': opt,
             'log_train': logger_train.read(),
@@ -123,16 +123,16 @@ def main():
         torch.save(data, dst_path_model.format(epoch + 1))
 
         # Remove previous model.
+        print('Remove the previous model.')
         if epoch > 0:
             os.system('rm {}'.format(dst_path_model.format(epoch)))
 
         # Backup the best model.
         if perform > best_perform:
-            print('Save this model as the best.')
+            print('Backup this model as the best.')
             os.system('cp {} {}'.format(
                 dst_path_model.format(epoch + 1),
                 os.path.join(dst_dir_model, 'best.pth.tar')))
-        print('')
 
 if __name__ == '__main__':
     main()
