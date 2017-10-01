@@ -139,7 +139,7 @@ class Db():
                 std = batch.view(opt.batch_size, 3, -1).std(2).mean(0)
                 mean_meter.update(mean, batch.size(0))
                 std_meter.update(std, batch.size(0))
-                print('Batch {}/{}, Mean {}, std {}'.format(
+                print('Batch {}/{}, mean {}, std {}'.format(
                     i + 1, num_batch,
                     utils.to_string(mean_meter.avg, '%.4f'),
                     utils.to_string(std_meter.avg, '%.4f')))
