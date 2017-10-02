@@ -3,14 +3,6 @@ import os.path
 
 IMG_EXTENSIONS = ['.jpg', '.JPG', '.jpeg', '.JPEG', '.png', '.PNG', '.ppm', '.PPM', '.bmp', '.BMP']
 
-def make_dataset(root, split):
-    if split == 'train':
-        return make_dataset_train(root)
-    elif split == 'val':
-        return make_dataset_val(root)
-    else:
-        raise Exception('Invalid split: {}'.format(split))
-
 def make_dataset_train(root):
     root_train = os.path.join(root, 'train')
     classes = [d for d in os.listdir(root_train) if os.path.isdir(os.path.join(root_train, d))]

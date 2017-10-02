@@ -4,8 +4,8 @@ from collections import Iterable
 
 import utils
 
-def train(loader, model, criterion, optimizer, evaluator, logger, epoch):
-    
+def train(batch_manager, model, logger, epoch):
+
     # Initialize meters.
     data_time = utils.AverageMeter()
     net_time = utils.AverageMeter()
@@ -13,7 +13,8 @@ def train(loader, model, criterion, optimizer, evaluator, logger, epoch):
     eval_meter = utils.AverageMeter()
     
     # Do the job.
-    model.train()
+    loader = batch_manager.loader # now db shuffled.
+    model.model.train()
     t0 = time.time()
     for i, (inputs, targets) in enumerate(loader):
         
@@ -27,16 +28,16 @@ def train(loader, model, criterion, optimizer, evaluator, logger, epoch):
         t0 = time.time()
         
         # Forward.
-        outputs = model(inputs_var)
-        loss = criterion(outputs, targets_var)
-        evals = evaluator(outputs.data, targets)
+        outputs = model.model(inputs_var)
+        loss = model.criterion(outputs, targets_var)
+        evals = batch_manager.evaluator(outputs.data, targets)
 
         # Backward.
-        optimizer.zero_grad()
+        model.optimizer.zero_grad()
         loss.backward()
 
         # Update.
-        optimizer.step()
+        model.optimizer.step()
 
         # Accumulate statistics.
         loss_meter.update(loss.data[0], targets.size(0))

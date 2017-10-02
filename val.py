@@ -4,7 +4,7 @@ from collections import Iterable
 
 import utils
 
-def val(loader, model, criterion, evaluator, logger=None, epoch=0):
+def val(batch_manager, model, logger=None, epoch=0):
     # Initialize meters.
     data_time = utils.AverageMeter()
     net_time = utils.AverageMeter()
@@ -12,7 +12,8 @@ def val(loader, model, criterion, evaluator, logger=None, epoch=0):
     eval_meter = utils.AverageMeter()
 
     # Do the job.
-    model.eval()
+    loader = batch_manager.loader
+    model.model.eval()
     t0 = time.time()
     for i, (inputs, targets) in enumerate(loader):
         # Set variables.
@@ -25,9 +26,9 @@ def val(loader, model, criterion, evaluator, logger=None, epoch=0):
         t0 = time.time()
 
         # Forward.
-        outputs = model(inputs_var)
-        loss = criterion(outputs, targets_var)
-        evals = evaluator(outputs.data, targets)
+        outputs = model.model(inputs_var)
+        loss = model.criterion(outputs, targets_var)
+        evals = batch_manager.evaluator(outputs.data, targets)
 
         # Accumulate statistics.
         loss_meter.update(loss.data[0], targets.size(0))
