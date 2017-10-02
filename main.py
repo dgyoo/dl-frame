@@ -22,8 +22,8 @@ def main():
     task = importlib.import_module(arg.task)
 
     # Get task-specific options and print.
-    parser = task.ArgumentParser()
-    opt = parser.opt
+    task_opt = task.Option()
+    opt = task_opt.opt
     print('Options.')
     for k in sorted(vars(opt)):
         if not k.startswith('dst_dir'):
@@ -53,8 +53,8 @@ def main():
     if opt.start_from:
         assert opt.start_from.endswith('.pth.tar')
         dst_dir_model = opt.start_from[:-8]
-    if parser.changes:
-        dst_dir_model += ',' + parser.changes
+    if task_opt.changes:
+        dst_dir_model += ',' + task_opt.changes
 
     # Apply decay to source model path, destination model directory/path, and learning rate.
     start_from = opt.start_from
@@ -79,6 +79,9 @@ def main():
     if start_epoch > 0:
         best_perform = logger_val.max()
         start_from = dst_path_model.format(start_epoch)
+    if start_epoch == opt.num_epoch:
+        print('All done.\n')
+        return
 
     # Initialize model, criterion, optimizer.
     model = task.Model(opt)

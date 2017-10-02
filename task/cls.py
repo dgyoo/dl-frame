@@ -1,7 +1,6 @@
 import sys
 import argparse
 import os.path
-import importlib
 from random import shuffle
 from PIL import Image
 
@@ -19,7 +18,7 @@ import metric
 ##########################
 # Task-specific options. #
 ##########################
-class ArgumentParser(object):
+class Option(object):
 
     def __init__(self):
         parser = argparse.ArgumentParser(description='Large-scale image classification')
@@ -51,10 +50,10 @@ class ArgumentParser(object):
                             help='weight decay')
         parser.add_argument('--evaluate', dest='evaluate', action='store_true',
                             help='if specified, evaluate model on validation set')
-        opt = parser.parse_args(sys.argv[3:])
+        args = parser.parse_args(sys.argv[3:])
         ignore = ['db', 'db_root', 'dst_dir', 'arch', 'start_from', 'num_worker', 'num_epoch', 'decay', 'evaluate']
-        changes = utils.arg_changes(parser, opt, ignore)
-        self._opt = opt
+        changes = utils.arg_changes(parser, args, ignore)
+        self._opt = args
         self._changes = changes
 
     @property
