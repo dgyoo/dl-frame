@@ -60,10 +60,10 @@ def main():
     start_from = opt.start_from
     learn_rate = opt.learn_rate
     for level in range(opt.decay):
-        start_from = os.path.join(dst_dir_model, 'best.pth.tar')
+        start_from = os.path.join(dst_dir_model, '{:03d}.pth.tar'.format(opt.num_epoch))
         assert opt.num_epoch == len(utils.Logger(os.path.join(dst_dir_model, 'val.log'))), \
                 'Finish training before decaying.'
-        dst_dir_model = os.path.join(dst_dir_model, 'best,decay={}'.format(level + 1))
+        dst_dir_model = os.path.join(dst_dir_model, '{:03d},decay={}'.format(opt.num_epoch, level + 1))
         learn_rate *= .1
         print('Decay learning rate: {:.0e}'.format(learn_rate))
     dst_path_model = os.path.join(dst_dir_model, '{:03d}.pth.tar')
