@@ -166,15 +166,8 @@ class BatchManagerTrain(Dataset):
     def evaluator(self):
         return self._evaluator
 
-class BatchManagerVal(Dataset):
+class BatchManagerVal(BatchManagerTrain):
     
-    def __init__(self, db, opt):
-        self._db = db
-        self._opt = opt
-        self._input_stats = None
-        self._loader = _data_loader(self, opt.num_worker)
-        self._evaluator = _evaluator
-
     # Get batch.
     def __getitem__(self, index):
         images, targets = [], []
@@ -196,21 +189,6 @@ class BatchManagerVal(Dataset):
             images.append(image)
             targets.append(target)
         return default_collate(images), default_collate(targets)
-
-    # Number of batches.
-    def __len__(self):
-        return -(-len(self._db['pairs']) // self._opt.batch_size)
-
-    def set_input_stats(self, input_stats):
-        self._input_stats = input_stats
-
-    @property
-    def loader(self):
-        return self._loader
-
-    @property
-    def evaluator(self):
-        return self._evaluator
 
 def _data_loader(batch_manager, num_worker):
     return DataLoader(
