@@ -16,7 +16,7 @@ def train(batch_manager, model, logger, epoch):
     loader = batch_manager.loader # now db shuffled.
     model.model.train()
     t0 = time.time()
-    for i, (inputs, targets) in enumerate(loader):
+    for i, (inputs, targets, _) in enumerate(loader):
         
         # Set variables.
         targets = targets.cuda(async=True)

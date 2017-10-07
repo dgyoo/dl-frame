@@ -15,7 +15,7 @@ def val(batch_manager, model, logger=None, epoch=0):
     loader = batch_manager.loader
     model.model.eval()
     t0 = time.time()
-    for i, (inputs, targets) in enumerate(loader):
+    for i, (inputs, targets, _) in enumerate(loader):
         # Set variables.
         targets = targets.cuda(async=True)
         inputs_var = torch.autograd.Variable(inputs, volatile=True)

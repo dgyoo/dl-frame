@@ -110,14 +110,16 @@ class BatchManagerTrain(Dataset):
         self._input_stats = None
         self._loader = _data_loader(self, opt.num_worker)
         self._evaluator = _evaluator
+        self._index_perm = torch.randperm(len(db['pairs']))
     
     # Get batch.
     def __getitem__(self, index):
-        images, targets = [], []
+        images, targets, indices = [], [], []
         db_size = len(self._db['pairs'])
         for batch_index in range(self._opt.batch_size):
             db_index = index * self._opt.batch_size + batch_index
             if db_index == db_size: break
+            db_index = self._index_perm[db_index]
             path, target = self._db['pairs'][db_index]
             with open(path, 'rb') as f:
                 with Image.open(f) as image:
@@ -131,7 +133,8 @@ class BatchManagerTrain(Dataset):
                         std=self._input_stats['std'])(image)
             images.append(image)
             targets.append(target)
-        return default_collate(images), default_collate(targets)
+            indices.append(db_index)
+        return default_collate(images), default_collate(targets), default_collate(indices)
 
     # Number of batches.
     def __len__(self):
@@ -159,7 +162,6 @@ class BatchManagerTrain(Dataset):
 
     @property
     def loader(self):
-        shuffle(self._db['pairs'])
         return self._loader
 
     @property
@@ -170,7 +172,7 @@ class BatchManagerVal(BatchManagerTrain):
     
     # Get batch.
     def __getitem__(self, index):
-        images, targets = [], []
+        images, targets, indices = [], [], []
         db_size = len(self._db['pairs'])
         for batch_index in range(self._opt.batch_size):
             db_index = index * self._opt.batch_size + batch_index
@@ -188,7 +190,8 @@ class BatchManagerVal(BatchManagerTrain):
                         std=self._input_stats['std'])(image)
             images.append(image)
             targets.append(target)
-        return default_collate(images), default_collate(targets)
+            indices.append(db_index)
+        return default_collate(images), default_collate(targets), default_collate(indices)
 
 def _data_loader(batch_manager, num_worker):
     return DataLoader(
