@@ -145,7 +145,7 @@ class BatchManagerTrain(Dataset):
         num_batch = int(-(-num_sample // self._opt.batch_size))
         mean_meter = utils.AverageMeter()
         std_meter = utils.AverageMeter()
-        for i, (batch, _) in enumerate(self._loader):
+        for i, (batch, _, _) in enumerate(self._loader):
             mean = batch.mean(3).mean(2).mean(0)
             std = batch.view(self._opt.batch_size, 3, -1).std(2).mean(0)
             mean_meter.update(mean, batch.size(0))
