@@ -162,6 +162,7 @@ class BatchManagerTrain(Dataset):
 
     @property
     def loader(self):
+        self._index_perm = torch.randperm(len(self._db['pairs']))
         return self._loader
 
     @property
