@@ -80,7 +80,7 @@ def main():
         best_perform = logger_val.max()
         start_from = dst_path_model.format(start_epoch)
     if start_epoch == opt.num_epoch:
-        print('All done.\n')
+        print('All done.')
         return
 
     # Initialize model, criterion, optimizer.
@@ -157,3 +157,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+    print('')
