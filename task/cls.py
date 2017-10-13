@@ -1,7 +1,6 @@
 import sys
 import argparse
 import os.path
-from random import shuffle
 from PIL import Image
 
 import torch.nn as nn
@@ -36,6 +35,10 @@ class Option(object):
                             help='path to a model from that to resume training')
         parser.add_argument('--num-worker', default=16, metavar='N', type=int,
                             help='number of workers that provide mini-batches')
+        parser.add_argument('--cache-train-data', dest='cache_train_data', action='store_true',
+                            help='if specified, load all the training samples on the memory')
+        parser.add_argument('--cache-val-data', dest='cache_val_data', action='store_true',
+                            help='if specified, load all the validation samples on the memory')
         parser.add_argument('--num-epoch', default=30, metavar='N', type=int,
                             help='number of total epochs to run')
         parser.add_argument('--batch-size', default=256, metavar='N', type=int,
@@ -51,7 +54,8 @@ class Option(object):
         parser.add_argument('--evaluate', dest='evaluate', action='store_true',
                             help='if specified, evaluate model on validation set')
         args = parser.parse_args(sys.argv[3:])
-        ignore = ['db', 'db_root', 'dst_dir', 'arch', 'start_from', 'num_worker', 'num_epoch', 'decay', 'evaluate']
+        ignore = ['db', 'db_root', 'dst_dir', 'arch', 'start_from', 'num_worker',
+                'cache_train_data', 'cache_val_data', 'num_epoch', 'decay', 'evaluate']
         changes = utils.arg_changes(parser, args, ignore)
         self._opt = args
         self._changes = changes
@@ -103,7 +107,7 @@ class Model(object):
 # Classes to provide batches. #
 ###############################
 class BatchManagerTrain(Dataset):
-    
+
     def __init__(self, db, opt, input_stats=None):
         self._db = db
         self._opt = opt
@@ -111,29 +115,43 @@ class BatchManagerTrain(Dataset):
         self._loader = _data_loader(self, opt.num_worker)
         self._evaluator = _evaluator
         self._index_perm = torch.randperm(len(db['pairs']))
-    
+        self._data_cache = None
+
     # Get batch.
     def __getitem__(self, index):
+
         images, targets, indices = [], [], []
         db_size = len(self._db['pairs'])
         for batch_index in range(self._opt.batch_size):
+
+            # Determine a sample index.
             db_index = index * self._opt.batch_size + batch_index
             if db_index == db_size: break
             db_index = self._index_perm[db_index]
-            path, target = self._db['pairs'][db_index]
-            with open(path, 'rb') as f:
-                with Image.open(f) as image:
-                    image = image.convert('RGB')
-            image = t.RandomSizedCrop(224)(image)
-            image = t.RandomHorizontalFlip()(image)
-            image = t.ToTensor()(image)
-            if not self._input_stats is None:
-                image = t.Normalize(
-                        mean=self._input_stats['mean'],
-                        std=self._input_stats['std'])(image)
+
+            # Processing from scratch.
+            if self._data_cache is None:
+                path, target = self._db['pairs'][db_index]
+                with open(path, 'rb') as f:
+                    with Image.open(f) as image:
+                        image = image.convert('RGB')
+                image = t.RandomSizedCrop(224)(image)
+                image = t.RandomHorizontalFlip()(image)
+                image = t.ToTensor()(image)
+                if not self._input_stats is None:
+                    image = t.Normalize(
+                            mean=self._input_stats['mean'],
+                            std=self._input_stats['std'])(image)
+
+            # Loading from cache.
+            else:
+                image, target = self._data_cache[db_index]
+
+            # Append.
             images.append(image)
             targets.append(target)
             indices.append(db_index)
+
         return default_collate(images), default_collate(targets), default_collate(indices)
 
     # Number of batches.
@@ -161,6 +179,16 @@ class BatchManagerTrain(Dataset):
         assert self._input_stats is None
         self._input_stats = input_stats
 
+    def cache_data(self):
+        assert not self._input_stats is None
+        data_cache = [[] for _ in range(len(self._db['pairs']))]
+        batch_manager = self.__class__(self._db, self._opt, self._input_stats)
+        for i, (images, targets, indices) in enumerate(batch_manager.loader):
+            for j in range(len(indices)):
+                data_cache[indices[j]] = (images[j], targets[j])
+            print('Batch {}/{}, cache data.'.format(i + 1, len(batch_manager)))
+        self._data_cache = data_cache
+
     @property
     def loader(self):
         self._index_perm = torch.randperm(len(self._db['pairs']))
@@ -171,28 +199,40 @@ class BatchManagerTrain(Dataset):
         return self._evaluator
 
 class BatchManagerVal(BatchManagerTrain):
-    
+
     # Get batch.
     def __getitem__(self, index):
+
         images, targets, indices = [], [], []
         db_size = len(self._db['pairs'])
         for batch_index in range(self._opt.batch_size):
+
+            # Determine a sample index.
             db_index = index * self._opt.batch_size + batch_index
             if db_index == db_size: break
-            path, target = self._db['pairs'][db_index]
-            with open(path, 'rb') as f:
-                with Image.open(f) as image:
-                    image = image.convert('RGB')
-            image = t.Scale(256)(image)
-            image = t.CenterCrop(224)(image)
-            image = t.ToTensor()(image)
-            if not self._input_stats is None:
+
+            # Processing from scratch
+            if self._data_cache is None:
+                path, target = self._db['pairs'][db_index]
+                with open(path, 'rb') as f:
+                    with Image.open(f) as image:
+                        image = image.convert('RGB')
+                image = t.Scale(256)(image)
+                image = t.CenterCrop(224)(image)
+                image = t.ToTensor()(image)
                 image = t.Normalize(
                         mean=self._input_stats['mean'],
                         std=self._input_stats['std'])(image)
+
+            # Loading from cache.
+            else:
+                image, target = self._data_cache[db_index]
+
+            # Append.
             images.append(image)
             targets.append(target)
             indices.append(db_index)
+
         return default_collate(images), default_collate(targets), default_collate(indices)
 
 def _data_loader(batch_manager, num_worker):

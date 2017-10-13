@@ -93,7 +93,7 @@ def main():
         checkpoint = torch.load(start_from)
         model.model.load_state_dict(checkpoint['state_dict'])
         model.optimizer.load_state_dict(checkpoint['optimizer'])
-    
+
     # Create batch manager.
     batch_manager_train = task.BatchManagerTrain(db_train, opt)
     batch_manager_val = task.BatchManagerVal(db_val, opt)
@@ -111,9 +111,15 @@ def main():
     batch_manager_train.set_input_stats(input_stats)
     batch_manager_val.set_input_stats(input_stats)
 
+    # Cache input data if necessary.
+    if opt.cache_train_data:
+        batch_manager_train.cache_data()
+    if opt.cache_val_data:
+        batch_manager_val.cache_data()
+
     # If evaluation mode, evaluate the model and exit.
     if opt.evaluate:
-        return nal.val(batch_manager_val, model)
+        return val.val(batch_manager_val, model)
 
     # Adjust learning rate before training.
     for param_group in model.optimizer.param_groups:
