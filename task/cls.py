@@ -104,10 +104,10 @@ class Model(object):
 ###############################
 class BatchManagerTrain(Dataset):
     
-    def __init__(self, db, opt):
+    def __init__(self, db, opt, input_stats=None):
         self._db = db
         self._opt = opt
-        self._input_stats = None
+        self._input_stats = input_stats
         self._loader = _data_loader(self, opt.num_worker)
         self._evaluator = _evaluator
         self._index_perm = torch.randperm(len(db['pairs']))
@@ -158,6 +158,7 @@ class BatchManagerTrain(Dataset):
         return {'mean': mean_meter.avg, 'std':std_meter.avg}
 
     def set_input_stats(self, input_stats):
+        assert self._input_stats is None
         self._input_stats = input_stats
 
     @property
