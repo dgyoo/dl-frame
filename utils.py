@@ -99,7 +99,7 @@ class Logger(object):
 
 def to_string(values, precision='%.2f'):
     if not isinstance(values, Iterable):
-        return precision % v
+        return precision % values
     string = ''
     for v in values:
         string += (precision % v) + ','
