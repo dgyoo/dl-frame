@@ -46,8 +46,9 @@ def main():
         log_val = logger_val.read()
         targets = [log[args.target_index] for log in log_val]
         index = targets.index(max(targets))
-        print('E {:02d} | TL {} TE {} | VL {} VE {} | {}'.format(
+        print('E {:02d}/{:02d} | TL {} TE {} | VL {} VE {} | {}'.format(
             int(log_train[index][0]),
+            len(logger_train),
             utils.to_string(log_train[index][1], form),
             utils.to_string(log_train[index][2:], form),
             utils.to_string(log_val[index][1], form),
